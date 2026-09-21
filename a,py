@@ -1,0 +1,793 @@
+# ============================================================
+# 🎬 CINEMA MOVIE RECOMMENDER SYSTEM
+# Subject: Recommender Systems & Data Taxonomy
+# Domain: Cinema Movies
+# ============================================================
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
+from sklearn.metrics.pairwise import cosine_similarity
+
+
+# ============================================================
+# 1. CREATE MOVIE DATASET
+# ============================================================
+
+data = {
+    "ID": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+
+    "Title": [
+        "Inception",
+        "Interstellar",
+        "The Dark Knight",
+        "Toy Story 4",
+        "Parasite",
+        "Oppenheimer",
+        "Spider-Man: Into the Spider-Verse",
+        "Pulp Fiction",
+        "Dune: Part Two",
+        "Spirited Away"
+    ],
+
+    "Has_Oscar": [
+        1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1
+    ],
+
+    "Is_Streaming": [
+        1, 1, 1, 1, 0,
+        1, 1, 1, 0, 1
+    ],
+
+    "Release_Year": [
+        2010, 2014, 2008, 2019, 2019,
+        2023, 2018, 1994, 2024, 2001
+    ],
+
+    "IMDb_Rating": [
+        8.8, 8.7, 9.0, 7.7, 8.5,
+        8.9, 8.4, 8.9, 8.6, 8.6
+    ],
+
+    "Duration_Min": [
+        148, 169, 152, 100, 132,
+        180, 117, 154, 166, 125
+    ],
+
+    "Genre": [
+        "Sci-Fi / Action",
+        "Sci-Fi / Drama",
+        "Action / Crime",
+        "Animation / Family",
+        "Drama / Thriller",
+        "Biography / Drama",
+        "Animation / Action",
+        "Crime / Drama",
+        "Sci-Fi / Adventure",
+        "Animation / Fantasy"
+    ],
+
+    "Director": [
+        "Christopher Nolan",
+        "Christopher Nolan",
+        "Christopher Nolan",
+        "Josh Cooley",
+        "Bong Joon Ho",
+        "Christopher Nolan",
+        "Bob Persichetti",
+        "Quentin Tarantino",
+        "Denis Villeneuve",
+        "Hayao Miyazaki"
+    ]
+}
+
+df = pd.DataFrame(data)
+
+
+# ============================================================
+# 2. DISPLAY DATASET
+# ============================================================
+
+print("\n" + "=" * 80)
+print("🎬 CINEMA MOVIE DATASET")
+print("=" * 80)
+
+print(df.to_string(index=False))
+
+
+# ============================================================
+# 3. DATASET INFORMATION
+# ============================================================
+
+print("\n" + "=" * 80)
+print("📊 DATASET INFORMATION")
+print("=" * 80)
+
+print(f"Number of movies: {len(df)}")
+print(f"Number of features: {len(df.columns)}")
+
+print("\nColumns:")
+for column in df.columns:
+    print(f"- {column}")
+
+
+# ============================================================
+# 4. CHECK MISSING VALUES
+# ============================================================
+
+print("\n" + "=" * 80)
+print("🔍 MISSING VALUES CHECK")
+print("=" * 80)
+
+missing_values = df.isnull().sum()
+
+print(missing_values)
+
+if missing_values.sum() == 0:
+    print("\n✅ No missing values found.")
+else:
+    print("\n⚠️ Missing values exist.")
+
+
+# ============================================================
+# 5. BASIC STATISTICS
+# ============================================================
+
+print("\n" + "=" * 80)
+print("📈 NUMERICAL STATISTICS")
+print("=" * 80)
+
+print(
+    df[
+        [
+            "Release_Year",
+            "IMDb_Rating",
+            "Duration_Min"
+        ]
+    ].describe()
+)
+
+
+# ============================================================
+# 6. TAXONOMY
+# ============================================================
+
+print("\n" + "=" * 80)
+print("🌳 CINEMA MOVIE TAXONOMY")
+print("=" * 80)
+
+print("""
+Cinema Movies
+│
+├── Live Action
+│   │
+│   ├── Sci-Fi / Action
+│   │   ├── Inception
+│   │   ├── Interstellar
+│   │   └── Dune: Part Two
+│   │
+│   ├── Action / Crime
+│   │   └── The Dark Knight
+│   │
+│   ├── Drama / Thriller
+│   │   └── Parasite
+│   │
+│   ├── Biography / Drama
+│   │   └── Oppenheimer
+│   │
+│   └── Crime / Drama
+│       └── Pulp Fiction
+│
+└── Animation
+    │
+    ├── Animation / Family
+    │   └── Toy Story 4
+    │
+    ├── Animation / Action
+    │   └── Spider-Man: Into the Spider-Verse
+    │
+    └── Animation / Fantasy
+        └── Spirited Away
+""")
+
+
+# ============================================================
+# 7. NORMALIZATION
+# ============================================================
+
+numeric_features = [
+    "Release_Year",
+    "IMDb_Rating",
+    "Duration_Min"
+]
+
+scaler = MinMaxScaler()
+
+df_scaled = df.copy()
+
+df_scaled[numeric_features] = scaler.fit_transform(
+    df[numeric_features]
+)
+
+print("\n" + "=" * 80)
+print("⚙️ NORMALIZED NUMERICAL FEATURES")
+print("=" * 80)
+
+print(
+    df_scaled[
+        [
+            "Title",
+            "Release_Year",
+            "IMDb_Rating",
+            "Duration_Min"
+        ]
+    ].to_string(index=False)
+)
+
+
+# ============================================================
+# 8. BUILD BASIC FEATURE VECTOR
+# ============================================================
+
+basic_features = [
+    "Has_Oscar",
+    "Is_Streaming",
+    "Release_Year",
+    "IMDb_Rating",
+    "Duration_Min"
+]
+
+feature_matrix = df_scaled[basic_features].values
+
+
+# ============================================================
+# 9. COSINE SIMILARITY
+# ============================================================
+
+similarity_matrix = cosine_similarity(feature_matrix)
+
+similarity_df = pd.DataFrame(
+    similarity_matrix,
+    index=df["Title"],
+    columns=df["Title"]
+)
+
+print("\n" + "=" * 80)
+print("🔢 COSINE SIMILARITY MATRIX")
+print("=" * 80)
+
+print(similarity_df.round(3))
+
+
+# ============================================================
+# 10. RECOMMENDATION FUNCTION
+# ============================================================
+
+def recommend_movie(movie_title, top_n=3):
+
+    if movie_title not in df["Title"].values:
+
+        print("\n❌ Movie not found!")
+
+        print("\nAvailable movies:")
+
+        for title in df["Title"]:
+            print("-", title)
+
+        return
+
+    movie_index = df[
+        df["Title"] == movie_title
+    ].index[0]
+
+    scores = list(
+        enumerate(
+            similarity_matrix[movie_index]
+        )
+    )
+
+    scores = sorted(
+        scores,
+        key=lambda x: x[1],
+        reverse=True
+    )
+
+    recommendations = []
+
+    for index, score in scores:
+
+        if index == movie_index:
+            continue
+
+        recommendations.append(
+            {
+                "Title": df.loc[index, "Title"],
+                "Genre": df.loc[index, "Genre"],
+                "Director": df.loc[index, "Director"],
+                "IMDb Rating": df.loc[index, "IMDb_Rating"],
+                "Similarity": score
+            }
+        )
+
+        if len(recommendations) == top_n:
+            break
+
+    result = pd.DataFrame(recommendations)
+
+    print("\n" + "=" * 80)
+    print(f"🎬 RECOMMENDATIONS FOR: {movie_title}")
+    print("=" * 80)
+
+    for i, row in result.iterrows():
+
+        print(
+            f"{i + 1}. {row['Title']}"
+        )
+
+        print(
+            f"   Genre: {row['Genre']}"
+        )
+
+        print(
+            f"   Director: {row['Director']}"
+        )
+
+        print(
+            f"   IMDb Rating: {row['IMDb Rating']}"
+        )
+
+        print(
+            f"   Similarity: {row['Similarity'] * 100:.2f}%"
+        )
+
+        print("-" * 80)
+
+    return result
+
+
+# ============================================================
+# 11. TEST RECOMMENDATION
+# ============================================================
+
+recommend_movie(
+    "Inception",
+    top_n=3
+)
+
+
+# ============================================================
+# 12. FIND MOST SIMILAR MOVIE PAIR
+# ============================================================
+
+print("\n" + "=" * 80)
+print("🏆 MOST SIMILAR MOVIE PAIR")
+print("=" * 80)
+
+max_similarity = -1
+
+movie_a = ""
+movie_b = ""
+
+for i in range(len(df)):
+
+    for j in range(i + 1, len(df)):
+
+        similarity = similarity_matrix[i][j]
+
+        if similarity > max_similarity:
+
+            max_similarity = similarity
+
+            movie_a = df.loc[i, "Title"]
+            movie_b = df.loc[j, "Title"]
+
+print(f"Movie 1: {movie_a}")
+print(f"Movie 2: {movie_b}")
+print(
+    f"Similarity: {max_similarity * 100:.2f}%"
+)
+
+
+# ============================================================
+# 13. DIRECTOR ANALYSIS
+# ============================================================
+
+print("\n" + "=" * 80)
+print("🎥 DIRECTOR ANALYSIS")
+print("=" * 80)
+
+director_counts = df["Director"].value_counts()
+
+print(director_counts)
+
+
+# ============================================================
+# 14. GENRE ANALYSIS
+# ============================================================
+
+print("\n" + "=" * 80)
+print("🎭 GENRE ANALYSIS")
+print("=" * 80)
+
+genre_counts = {}
+
+for genre_string in df["Genre"]:
+
+    genres = [
+        genre.strip()
+        for genre in genre_string.split("/")
+    ]
+
+    for genre in genres:
+
+        genre_counts[genre] = (
+            genre_counts.get(genre, 0) + 1
+        )
+
+genre_df = pd.DataFrame(
+    list(genre_counts.items()),
+    columns=["Genre", "Count"]
+)
+
+genre_df = genre_df.sort_values(
+    "Count",
+    ascending=False
+)
+
+print(genre_df.to_string(index=False))
+
+
+# ============================================================
+# 15. AVERAGE RATING
+# ============================================================
+
+average_rating = df["IMDb_Rating"].mean()
+
+print("\n" + "=" * 80)
+print("⭐ AVERAGE IMDb RATING")
+print("=" * 80)
+
+print(
+    f"Average rating: {average_rating:.2f}"
+)
+
+
+# ============================================================
+# 16. HIGHEST RATED MOVIES
+# ============================================================
+
+print("\n" + "=" * 80)
+print("⭐ HIGHEST RATED MOVIES")
+print("=" * 80)
+
+highest_rated = df.sort_values(
+    "IMDb_Rating",
+    ascending=False
+)
+
+print(
+    highest_rated[
+        [
+            "Title",
+            "IMDb_Rating"
+        ]
+    ].head(5).to_string(index=False)
+)
+
+
+# ============================================================
+# 17. LONGEST MOVIES
+# ============================================================
+
+print("\n" + "=" * 80)
+print("⏱️ LONGEST MOVIES")
+print("=" * 80)
+
+longest_movies = df.sort_values(
+    "Duration_Min",
+    ascending=False
+)
+
+print(
+    longest_movies[
+        [
+            "Title",
+            "Duration_Min"
+        ]
+    ].head(5).to_string(index=False)
+)
+
+
+# ============================================================
+# 18. NEWEST MOVIES
+# ============================================================
+
+print("\n" + "=" * 80)
+print("📅 NEWEST MOVIES")
+print("=" * 80)
+
+newest_movies = df.sort_values(
+    "Release_Year",
+    ascending=False
+)
+
+print(
+    newest_movies[
+        [
+            "Title",
+            "Release_Year"
+        ]
+    ].head(5).to_string(index=False)
+)
+
+
+# ============================================================
+# 19. STREAMING ANALYSIS
+# ============================================================
+
+print("\n" + "=" * 80)
+print("📺 STREAMING AVAILABILITY")
+print("=" * 80)
+
+streaming_counts = df[
+    "Is_Streaming"
+].value_counts()
+
+print(
+    f"Available for streaming: "
+    f"{streaming_counts.get(1, 0)}"
+)
+
+print(
+    f"Not available for streaming: "
+    f"{streaming_counts.get(0, 0)}"
+)
+
+
+# ============================================================
+# 20. OSCAR ANALYSIS
+# ============================================================
+
+print("\n" + "=" * 80)
+print("🏆 OSCAR ANALYSIS")
+print("=" * 80)
+
+oscar_movies = df[
+    df["Has_Oscar"] == 1
+]
+
+print(
+    f"Movies with Oscar: {len(oscar_movies)}"
+)
+
+print(
+    f"Movies without Oscar: "
+    f"{len(df) - len(oscar_movies)}"
+)
+
+
+# ============================================================
+# 21. SAVE DATASET TO CSV
+# ============================================================
+
+df.to_csv(
+    "movies_dataset.csv",
+    index=False,
+    encoding="utf-8-sig"
+)
+
+print("\n" + "=" * 80)
+print("💾 DATASET SAVED")
+print("=" * 80)
+
+print(
+    "File created: movies_dataset.csv"
+)
+
+
+# ============================================================
+# 22. SAVE SIMILARITY MATRIX
+# ============================================================
+
+similarity_df.to_csv(
+    "movie_similarity_matrix.csv",
+    encoding="utf-8-sig"
+)
+
+print(
+    "File created: movie_similarity_matrix.csv"
+)
+
+
+# ============================================================
+# 23. VISUALIZATION - IMDb RATINGS
+# ============================================================
+
+plt.figure(figsize=(12, 6))
+
+plt.bar(
+    df["Title"],
+    df["IMDb_Rating"]
+)
+
+plt.title(
+    "IMDb Ratings of Movies"
+)
+
+plt.xlabel(
+    "Movie"
+)
+
+plt.ylabel(
+    "IMDb Rating"
+)
+
+plt.xticks(
+    rotation=45,
+    ha="right"
+)
+
+plt.tight_layout()
+
+plt.savefig(
+    "imdb_ratings.png",
+    dpi=300
+)
+
+plt.show()
+
+
+# ============================================================
+# 24. VISUALIZATION - MOVIE DURATIONS
+# ============================================================
+
+plt.figure(figsize=(12, 6))
+
+plt.bar(
+    df["Title"],
+    df["Duration_Min"]
+)
+
+plt.title(
+    "Movie Duration"
+)
+
+plt.xlabel(
+    "Movie"
+)
+
+plt.ylabel(
+    "Duration (Minutes)"
+)
+
+plt.xticks(
+    rotation=45,
+    ha="right"
+)
+
+plt.tight_layout()
+
+plt.savefig(
+    "movie_duration.png",
+    dpi=300
+)
+
+plt.show()
+
+
+# ============================================================
+# 25. VISUALIZATION - RELEASE YEARS
+# ============================================================
+
+plt.figure(figsize=(12, 6))
+
+plt.bar(
+    df["Title"],
+    df["Release_Year"]
+)
+
+plt.title(
+    "Movie Release Years"
+)
+
+plt.xlabel(
+    "Movie"
+)
+
+plt.ylabel(
+    "Release Year"
+)
+
+plt.xticks(
+    rotation=45,
+    ha="right"
+)
+
+plt.tight_layout()
+
+plt.savefig(
+    "release_years.png",
+    dpi=300
+)
+
+plt.show()
+
+
+# ============================================================
+# 26. SIMILARITY HEATMAP WITHOUT SEABORN
+# ============================================================
+
+plt.figure(figsize=(12, 9))
+
+plt.imshow(
+    similarity_matrix,
+    interpolation="nearest"
+)
+
+plt.colorbar(
+    label="Cosine Similarity"
+)
+
+plt.xticks(
+    range(len(df)),
+    df["Title"],
+    rotation=90
+)
+
+plt.yticks(
+    range(len(df)),
+    df["Title"]
+)
+
+plt.title(
+    "Movie Cosine Similarity Matrix"
+)
+
+plt.tight_layout()
+
+plt.savefig(
+    "similarity_matrix.png",
+    dpi=300
+)
+
+plt.show()
+
+
+# ============================================================
+# 27. FINAL SUMMARY
+# ============================================================
+
+print("\n")
+print("=" * 80)
+print("🎬 PROJECT COMPLETED SUCCESSFULLY")
+print("=" * 80)
+
+print("""
+The project includes:
+
+✅ Movie Dataset
+✅ Binary Features
+✅ Numerical Features
+✅ Categorical Features
+✅ Data Normalization
+✅ Feature Vector
+✅ Cosine Similarity
+✅ Recommendation Algorithm
+✅ Movie Taxonomy
+✅ Genre Analysis
+✅ Director Analysis
+✅ Oscar Analysis
+✅ Streaming Analysis
+✅ IMDb Analysis
+✅ Movie Duration Analysis
+✅ Similarity Matrix
+✅ CSV Export
+✅ Graphs
+✅ Recommendation Results
+""")
+
+print("=" * 80)
+print("🎬 END OF PROGRAM")
+print("=" * 80)
